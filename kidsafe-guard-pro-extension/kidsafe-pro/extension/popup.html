@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KidSafe Guard Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --on-bg: linear-gradient(145deg, #0f4c75 0%, #1b6ca8 40%, #4361ee 100%);
+      --off-bg: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      --pro-accent: #f59e0b;
+      --pro-gradient: linear-gradient(135deg, #f59e0b, #ef4444);
+      --card: rgba(255,255,255,0.09);
+      --card-border: rgba(255,255,255,0.14);
+      --radius: 18px;
+      --green: #22c55e;
+      --red: #ef4444;
+    }
+
+    body {
+      width: 360px;
+      min-height: 480px;
+      font-family: 'Nunito', sans-serif;
+      background: var(--off-bg);
+      color: #fff;
+      overflow: hidden;
+      position: relative;
+    }
+    body.protected { background: var(--on-bg); }
+
+    /* Animated orbs */
+    .orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(60px); opacity: 0.18; pointer-events: none;
+      transition: all 0.6s ease;
+    }
+    .orb1 { width: 220px; height: 220px; background: #60a5fa; top: -90px; right: -70px; animation: drift1 8s ease-in-out infinite; }
+    .orb2 { width: 180px; height: 180px; background: #818cf8; bottom: -70px; left: -50px; animation: drift2 10s ease-in-out infinite; }
+    .orb3 { width: 100px; height: 100px; background: #f59e0b; top: 50%; left: 50%; opacity: 0; transition: opacity 0.5s; }
+    body.protected .orb3 { opacity: 0.12; }
+
+    @keyframes drift1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-20px,15px) scale(1.1); } }
+    @keyframes drift2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(15px,-20px) scale(1.08); } }
+
+    /* Header */
+    .header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 18px 12px;
+      position: relative; z-index: 1;
+    }
+    .logo-area { display: flex; align-items: center; gap: 10px; }
+    .logo svg { width: 34px; height: 34px; filter: drop-shadow(0 3px 8px rgba(99,102,241,0.5)); }
+    .brand { font-size: 15px; font-weight: 900; letter-spacing: -0.3px; }
+    .brand span { opacity: 0.6; font-weight: 600; font-size: 10px; display: block; }
+    .pro-badge {
+      background: var(--pro-gradient);
+      color: white; font-size: 9px; font-weight: 900;
+      letter-spacing: 1.5px; padding: 3px 10px;
+      border-radius: 50px; display: none;
+      box-shadow: 0 3px 10px rgba(245,158,11,0.4);
+    }
+    .pro-badge.show { display: inline-block; }
+
+    /* Main Card */
+    .card {
+      margin: 0 14px 10px;
+      background: var(--card);
+      border-radius: var(--radius);
+      backdrop-filter: blur(24px);
+      border: 1px solid var(--card-border);
+      padding: 22px 20px;
+      position: relative; z-index: 1;
+    }
+
+    .status-area { text-align: center; margin-bottom: 18px; }
+    .status-ring {
+      width: 78px; height: 78px; border-radius: 50%;
+      margin: 0 auto 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 34px;
+      background: rgba(255,255,255,0.1);
+      border: 2.5px solid rgba(255,255,255,0.2);
+      transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+      position: relative;
+    }
+    .status-ring.on {
+      background: rgba(34,197,94,0.2);
+      border-color: var(--green);
+      animation: pulse-ring 2.5s infinite;
+    }
+    .status-ring.on::after {
+      content: '';
+      position: absolute; inset: -8px;
+      border-radius: 50%;
+      border: 2px solid rgba(34,197,94,0.3);
+      animation: expand-ring 2.5s infinite;
+    }
+
+    @keyframes pulse-ring {
+      0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.4), 0 8px 30px rgba(0,0,0,0.3); }
+      70%  { box-shadow: 0 0 0 10px rgba(34,197,94,0), 0 8px 30px rgba(0,0,0,0.3); }
+      100% { box-shadow: 0 0 0 0 rgba(34,197,94,0), 0 8px 30px rgba(0,0,0,0.3); }
+    }
+    @keyframes expand-ring {
+      0%   { opacity: 1; transform: scale(1); }
+      100% { opacity: 0; transform: scale(1.4); }
+    }
+
+    .status-label { font-size: 20px; font-weight: 900; letter-spacing: -0.5px; }
+    .status-sub { font-size: 11.5px; opacity: 0.65; margin-top: 3px; font-weight: 700; }
+
+    /* Main Toggle Button */
+    .toggle-btn {
+      width: 100%; padding: 14px;
+      border-radius: 14px; border: none; cursor: pointer;
+      font-family: 'Nunito', sans-serif;
+      font-size: 15px; font-weight: 900;
+      transition: all 0.25s ease; color: white;
+      position: relative; overflow: hidden;
+    }
+    .toggle-btn::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: rgba(255,255,255,0);
+      transition: background 0.2s;
+    }
+    .toggle-btn:hover::after { background: rgba(255,255,255,0.08); }
+    .toggle-btn.btn-enable {
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+      box-shadow: 0 6px 22px rgba(34,197,94,0.45);
+    }
+    .toggle-btn.btn-enable:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(34,197,94,0.55); }
+    .toggle-btn.btn-disable {
+      background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+      box-shadow: 0 6px 22px rgba(239,68,68,0.4);
+    }
+    .toggle-btn.btn-disable:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(239,68,68,0.55); }
+    .toggle-btn:active { transform: translateY(1px); }
+    .toggle-btn:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+
+    /* Feature Pills */
+    .features {
+      margin: 0 14px 10px;
+      background: var(--card);
+      border-radius: var(--radius);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      padding: 13px 15px;
+      position: relative; z-index: 1;
+    }
+    .features-title {
+      font-size: 10px; font-weight: 900; opacity: 0.5;
+      letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 9px;
+    }
+    .feature-row {
+      display: flex; align-items: center; gap: 9px;
+      margin-bottom: 7px; font-size: 11.5px; font-weight: 700;
+    }
+    .feature-row:last-child { margin-bottom: 0; }
+    .f-icon {
+      width: 24px; height: 24px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; flex-shrink: 0; background: rgba(255,255,255,0.1);
+    }
+    .f-label { flex: 1; }
+    .f-pro-tag {
+      font-size: 8px; font-weight: 900; letter-spacing: 1px;
+      background: var(--pro-gradient); color: white;
+      padding: 1px 6px; border-radius: 50px;
+    }
+    .f-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: rgba(255,255,255,0.2); flex-shrink: 0;
+      transition: background 0.4s;
+    }
+    .f-dot.active { background: var(--green); box-shadow: 0 0 6px rgba(34,197,94,0.7); }
+
+    /* Stats Row - Pro only */
+    .stats-row {
+      display: none;
+      gap: 8px; margin: 0 14px 10px;
+      position: relative; z-index: 1;
+    }
+    .stats-row.show { display: flex; }
+    .stat-card {
+      flex: 1; background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 13px; padding: 10px 12px;
+      backdrop-filter: blur(20px); text-align: center;
+    }
+    .stat-num { font-size: 18px; font-weight: 900; color: var(--pro-accent); }
+    .stat-label { font-size: 9px; opacity: 0.55; font-weight: 800; letter-spacing: 0.5px; }
+
+    /* Bottom Actions */
+    .bottom-actions {
+      display: flex; gap: 7px; padding: 0 14px 16px;
+      position: relative; z-index: 1;
+    }
+    .icon-btn {
+      flex: 1; background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 12px; color: white;
+      font-family: 'Nunito', sans-serif;
+      font-size: 10px; font-weight: 800;
+      padding: 9px 5px; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      transition: all 0.2s; backdrop-filter: blur(10px);
+    }
+    .icon-btn:hover { background: rgba(255,255,255,0.18); transform: translateY(-1px); }
+    .icon-btn .btn-icon { font-size: 15px; }
+    .icon-btn.pro-action { border-color: rgba(245,158,11,0.3); }
+    .icon-btn.pro-action:hover { background: rgba(245,158,11,0.15); }
+
+    /* PRO CTA Button */
+    .pro-cta {
+      margin: 0 14px 10px;
+      background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(239,68,68,0.1));
+      border: 1px solid rgba(245,158,11,0.35);
+      border-radius: var(--radius);
+      padding: 12px 15px;
+      display: flex; align-items: center; gap: 12px;
+      cursor: pointer; transition: all 0.25s;
+      position: relative; z-index: 1;
+    }
+    .pro-cta:hover { background: linear-gradient(135deg, rgba(245,158,11,0.25), rgba(239,68,68,0.18)); transform: translateY(-1px); }
+    .pro-cta-icon { font-size: 28px; }
+    .pro-cta-text { flex: 1; }
+    .pro-cta-title { font-size: 13px; font-weight: 900; color: var(--pro-accent); }
+    .pro-cta-sub { font-size: 10px; opacity: 0.65; font-weight: 700; }
+    .pro-cta-arrow { font-size: 18px; opacity: 0.6; }
+    .pro-cta.hidden { display: none; }
+
+    /* ═══════════════════════════════════════════ MODALS */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(10px);
+      z-index: 200;
+      display: none; align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.show { display: flex; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal {
+      background: linear-gradient(145deg, #1e293b, #0f172a);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 22px; padding: 24px 20px; width: 100%;
+      box-shadow: 0 30px 70px rgba(0,0,0,0.6);
+      animation: slideUp 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .modal h2 { font-size: 17px; font-weight: 900; margin-bottom: 6px; text-align: center; }
+    .modal p { font-size: 12px; opacity: 0.6; text-align: center; margin-bottom: 16px; font-weight: 700; line-height: 1.5; }
+    .modal-emoji { font-size: 44px; text-align: center; margin-bottom: 10px; }
+
+    .input-field {
+      width: 100%;
+      background: rgba(255,255,255,0.07);
+      border: 1.5px solid rgba(255,255,255,0.18);
+      border-radius: 12px; padding: 11px 14px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px; font-weight: 700; color: white; outline: none;
+      margin-bottom: 9px; letter-spacing: 2px; transition: border-color 0.2s;
+    }
+    .input-field::placeholder { letter-spacing: 0; opacity: 0.35; }
+    .input-field:focus { border-color: rgba(255,255,255,0.45); }
+    .input-field.code-input { letter-spacing: 3px; font-size: 13px; text-transform: uppercase; }
+
+    .error-msg {
+      background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.35);
+      border-radius: 10px; color: #fca5a5; font-size: 11px; font-weight: 800;
+      padding: 8px 12px; margin-bottom: 9px; text-align: center; display: none;
+    }
+    .error-msg.show { display: block; }
+    .success-msg {
+      background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.35);
+      border-radius: 10px; color: #86efac; font-size: 11px; font-weight: 800;
+      padding: 8px 12px; margin-bottom: 9px; text-align: center; display: none;
+    }
+    .success-msg.show { display: block; }
+
+    .modal-btns { display: flex; gap: 8px; margin-top: 4px; }
+    .modal-btn {
+      flex: 1; padding: 11px; border-radius: 12px; border: none;
+      font-family: 'Nunito', sans-serif; font-size: 12.5px; font-weight: 900;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .modal-btn.primary { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; }
+    .modal-btn.primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .modal-btn.pro-btn { background: var(--pro-gradient); color: white; }
+    .modal-btn.pro-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .modal-btn.secondary { background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.12); }
+    .modal-btn.secondary:hover { background: rgba(255,255,255,0.14); }
+    .modal-btn.danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+
+    /* Schedule inputs - Pro */
+    .schedule-row { display: flex; gap: 8px; margin-bottom: 9px; }
+    .schedule-row label { font-size: 10px; font-weight: 800; opacity: 0.6; margin-bottom: 4px; display: block; }
+    .schedule-group { flex: 1; }
+    .input-field.time-input { letter-spacing: 0; }
+
+    /* Pro feature list in modal */
+    .pro-features-list { margin: 12px 0; }
+    .pro-feature-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 10px; border-radius: 10px;
+      background: rgba(255,255,255,0.05); margin-bottom: 5px;
+      font-size: 11.5px; font-weight: 800;
+    }
+    .pro-feature-item .pfi-icon { font-size: 16px; }
+    .pro-feature-item .pfi-check { margin-left: auto; color: #22c55e; font-size: 14px; }
+
+    .website-link {
+      display: block; text-align: center; margin-top: 12px;
+      color: rgba(255,255,255,0.5); font-size: 10.5px; font-weight: 800;
+      text-decoration: none; transition: color 0.2s;
+    }
+    .website-link:hover { color: var(--pro-accent); }
+
+    /* Shake animation */
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+    .shake { animation: shake 0.4s ease; }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white; border-radius: 50%;
+      animation: spin 0.7s linear infinite; margin-right: 6px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <!-- Background orbs -->
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo-area">
+      <div class="logo">
+        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 2L5 7.5V18C5 25.5 10.5 32 18 35C25.5 32 31 25.5 31 18V7.5L18 2Z" fill="url(#shieldGrad)"/>
+          <path d="M12 18L16 22L24 14" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <linearGradient id="shieldGrad" x1="5" y1="2" x2="31" y2="35" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#60a5fa"/>
+              <stop offset="1" stop-color="#6366f1"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="brand">
+        KidSafe Guard
+        <span>Parental Control</span>
+      </div>
+    </div>
+    <div class="pro-badge" id="proBadge">⭐ PRO</div>
+  </div>
+
+  <!-- Main Status Card -->
+  <div class="card">
+    <div class="status-area">
+      <div class="status-ring" id="statusRing">🔓</div>
+      <div class="status-label" id="statusLabel">Protection OFF</div>
+      <div class="status-sub" id="statusSub">Tap below to protect your child</div>
+    </div>
+    <button class="toggle-btn btn-enable" id="mainBtn">🔒 Enable Child Protection</button>
+  </div>
+
+  <!-- Stats (Pro only) -->
+  <div class="stats-row" id="statsRow">
+    <div class="stat-card">
+      <div class="stat-num" id="blockedCount">0</div>
+      <div class="stat-label">BLOCKED TODAY</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="sessionTime">0h</div>
+      <div class="stat-label">PROTECTED TIME</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">100+</div>
+      <div class="stat-label">SITES BLOCKED</div>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div class="features">
+    <div class="features-title">🛡️ Protection Features</div>
+    <div class="feature-row">
+      <div class="f-icon">🚫</div>
+      <span class="f-label">Adult &amp; Explicit Content</span>
+      <div class="f-dot" id="dot1"></div>
+    </div>
+    <div class="feature-row">
+      <div class="f-icon">▶️</div>
+      <span class="f-label">YouTube Safe Mode</span>
+      <div class="f-dot" id="dot2"></div>
+    </div>
+    <div class="feature-row">
+      <div class="f-icon">🔍</div>
+      <span class="f-label">Safe Search (Google, Bing)</span>
+      <div class="f-dot" id="dot3"></div>
+    </div>
+    <div class="feature-row">
+      <div class="f-icon">🎰</div>
+      <span class="f-label">Gambling Sites Blocked</span>
+      <div class="f-dot" id="dot4"></div>
+    </div>
+    <div class="feature-row">
+      <div class="f-icon">⏰</div>
+      <span class="f-label">Scheduled Protection</span>
+      <span class="f-pro-tag">PRO</span>
+      <div class="f-dot" id="dot5"></div>
+    </div>
+  </div>
+
+  <!-- Pro CTA (shown when not pro) -->
+  <div class="pro-cta" id="proCta">
+    <div class="pro-cta-icon">⭐</div>
+    <div class="pro-cta-text">
+      <div class="pro-cta-title">Upgrade to Pro</div>
+      <div class="pro-cta-sub">Schedule, reports &amp; advanced filters</div>
+    </div>
+    <div class="pro-cta-arrow">→</div>
+  </div>
+
+  <!-- Bottom Actions -->
+  <div class="bottom-actions">
+    <button class="icon-btn" id="changePwdBtn">
+      <span class="btn-icon">🔑</span>
+      <span>Password</span>
+    </button>
+    <button class="icon-btn pro-action" id="scheduleBtn">
+      <span class="btn-icon">⏰</span>
+      <span>Schedule</span>
+    </button>
+    <button class="icon-btn pro-action" id="proActivateBtn">
+      <span class="btn-icon">⭐</span>
+      <span>Activate Pro</span>
+    </button>
+    <button class="icon-btn" id="aboutBtn">
+      <span class="btn-icon">ℹ️</span>
+      <span>About</span>
+    </button>
+  </div>
+
+  <!-- ═══════════════ SETUP MODAL ═══════════════ -->
+  <div class="modal-overlay" id="setupModal">
+    <div class="modal">
+      <div class="modal-emoji">👨‍👩‍👧‍👦</div>
+      <h2>Welcome, Parent!</h2>
+      <p>Create a secret password. Your child cannot turn off protection without it.</p>
+      <input type="password" class="input-field" id="setupPwd1" placeholder="Create your password" maxlength="32">
+      <input type="password" class="input-field" id="setupPwd2" placeholder="Confirm your password" maxlength="32">
+      <div class="error-msg" id="setupError"></div>
+      <div class="modal-btns">
+        <button class="modal-btn primary" id="setupSaveBtn">✅ Create Password &amp; Start</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ DISABLE MODAL ═══════════════ -->
+  <div class="modal-overlay" id="disableModal">
+    <div class="modal">
+      <div class="modal-emoji">🔐</div>
+      <h2>Parent Verification</h2>
+      <p>Enter your password to temporarily disable child protection.</p>
+      <input type="password" class="input-field" id="disablePwd" placeholder="Enter your password" maxlength="32">
+      <div class="error-msg" id="disableError"></div>
+      <div class="modal-btns">
+        <button class="modal-btn secondary" id="disableCancelBtn">Cancel</button>
+        <button class="modal-btn danger" id="disableConfirmBtn">🔓 Turn Off</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ CHANGE PASSWORD MODAL ═══════════════ -->
+  <div class="modal-overlay" id="changePwdModal">
+    <div class="modal">
+      <div class="modal-emoji">🔑</div>
+      <h2>Change Password</h2>
+      <p>Enter your current password, then choose a new one.</p>
+      <input type="password" class="input-field" id="oldPwd" placeholder="Current password" maxlength="32">
+      <input type="password" class="input-field" id="newPwd1" placeholder="New password" maxlength="32">
+      <input type="password" class="input-field" id="newPwd2" placeholder="Confirm new password" maxlength="32">
+      <div class="error-msg" id="changePwdError"></div>
+      <div class="success-msg" id="changePwdSuccess">✅ Password changed successfully!</div>
+      <div class="modal-btns">
+        <button class="modal-btn secondary" id="changePwdCancelBtn">Cancel</button>
+        <button class="modal-btn primary" id="changePwdSaveBtn">💾 Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ PRO ACTIVATE MODAL ═══════════════ -->
+  <div class="modal-overlay" id="proModal">
+    <div class="modal">
+      <div class="modal-emoji">⭐</div>
+      <h2>Activate Pro License</h2>
+      <p>Enter the license code from your email after purchase.</p>
+      <input type="text" class="input-field code-input" id="proCode" placeholder="KSGPRO-XXXXXXXX" maxlength="15">
+      <input type="email" class="input-field" id="proEmail" placeholder="Your email address" style="letter-spacing:0">
+      <div class="error-msg" id="proError"></div>
+      <div class="success-msg" id="proSuccess">⭐ Pro activated! All features unlocked!</div>
+      <div class="modal-btns">
+        <button class="modal-btn secondary" id="proCancelBtn">Cancel</button>
+        <button class="modal-btn pro-btn" id="proConfirmBtn">⭐ Activate Pro</button>
+      </div>
+      <a href="https://kidsafeguard.pro/#pricing" target="_blank" class="website-link">
+        Don't have a code? Get Pro at kidsafeguard.pro →
+      </a>
+    </div>
+  </div>
+
+  <!-- ═══════════════ SCHEDULE MODAL (Pro) ═══════════════ -->
+  <div class="modal-overlay" id="scheduleModal">
+    <div class="modal">
+      <div class="modal-emoji">⏰</div>
+      <h2>Schedule Protection</h2>
+      <p>Set times when protection turns ON automatically. (Pro feature)</p>
+      <div class="schedule-row">
+        <div class="schedule-group">
+          <label>Start Time</label>
+          <input type="time" class="input-field time-input" id="scheduleStart" value="08:00">
+        </div>
+        <div class="schedule-group">
+          <label>End Time</label>
+          <input type="time" class="input-field time-input" id="scheduleEnd" value="22:00">
+        </div>
+      </div>
+      <div class="error-msg" id="scheduleError"></div>
+      <div class="success-msg" id="scheduleSuccess">✅ Schedule saved!</div>
+      <div class="modal-btns">
+        <button class="modal-btn secondary" id="scheduleCancelBtn">Cancel</button>
+        <button class="modal-btn pro-btn" id="scheduleSaveBtn">⏰ Save Schedule</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ ABOUT MODAL ═══════════════ -->
+  <div class="modal-overlay" id="aboutModal">
+    <div class="modal">
+      <div class="modal-emoji">🛡️</div>
+      <h2>KidSafe Guard Pro v2.0</h2>
+      <p>The world's most trusted parental control browser extension.</p>
+      <div class="pro-features-list">
+        <div class="pro-feature-item"><span class="pfi-icon">🚫</span> 200+ harmful sites blocked <span class="pfi-check">✓</span></div>
+        <div class="pro-feature-item"><span class="pfi-icon">▶️</span> YouTube Restricted Mode <span class="pfi-check">✓</span></div>
+        <div class="pro-feature-item"><span class="pfi-icon">🔍</span> Safe Search enforced <span class="pfi-check">✓</span></div>
+        <div class="pro-feature-item"><span class="pfi-icon">🔐</span> Password protection <span class="pfi-check">✓</span></div>
+        <div class="pro-feature-item"><span class="pfi-icon">⏰</span> Auto-schedule (Pro) <span class="pfi-check">★</span></div>
+      </div>
+      <div class="modal-btns">
+        <button class="modal-btn primary" id="aboutCloseBtn">Got it! 👍</button>
+      </div>
+      <a href="https://kidsafeguard.pro" target="_blank" class="website-link">🌐 kidsafeguard.pro</a>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

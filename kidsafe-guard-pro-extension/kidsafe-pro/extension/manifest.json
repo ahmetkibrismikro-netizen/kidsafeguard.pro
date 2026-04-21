@@ -1,0 +1,55 @@
+{
+  "manifest_version": 3,
+  "name": "KidSafe Guard Pro – Parental Controls",
+  "version": "2.0.0",
+  "description": "The #1 parental control extension. Blocks adult, gambling & harmful content. Password-protected. YouTube Safe Mode. Pro license unlocks advanced AI content filtering.",
+  "permissions": [
+    "storage",
+    "declarativeNetRequest",
+    "declarativeNetRequestFeedback",
+    "tabs",
+    "scripting",
+    "alarms",
+    "webNavigation"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "KidSafe Guard Pro"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/*"],
+      "js": ["youtube-safe.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["*://*.google.com/*", "*://*.bing.com/*", "*://*.duckduckgo.com/*"],
+      "js": ["safe-search.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "adult_block",
+        "enabled": false,
+        "path": "rules/adult.json"
+      }
+    ]
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["blocked.html", "icons/*.png"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
